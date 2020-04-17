@@ -12,6 +12,7 @@ import randomColor from "../node_modules/randomcolor/randomColor.js";
 import { PersistentState } from "./lib/savedstate";
 import { d3_scale_percentile, d3_scale_timestamp, scale_add_outliers } from "./lib/d3_scales";
 import { Datapoint, ParamType, HiPlotValueDef } from "./types";
+import { FilterRange } from "./filters";
 
 
 function hashCode(str: string): number {
@@ -90,9 +91,16 @@ export function create_d3_scale(pd: ParamDef): any {
     return scale;
 }
 
-export function scale_pixels_range(scale: any, extents: [number, number]): any {
+interface ScaleRange {
+    type: ParamType;
+    brush_extents_normalized: [number, number];
+    values?: Array<any>;
+    range?: [number, number];
+};
+
+export function scale_pixels_range(scale: any, extents: [number, number]): ScaleRange {
     const scaleToNorm = d3.scaleLinear().domain(scale.range()).range([0, 1]);
-    const normalized = [scaleToNorm(extents[0]), scaleToNorm(extents[1])];
+    const normalized: [number, number] = [scaleToNorm(extents[0]), scaleToNorm(extents[1])];
     switch (scale.hip_type as ParamType) {
         case ParamType.CATEGORICAL:
             const domain: Array<string> = scale.domain();
@@ -108,6 +116,7 @@ export function scale_pixels_range(scale: any, extents: [number, number]): any {
         case ParamType.NUMERIC:
         case ParamType.NUMERICLOG:
         case ParamType.NUMERICPERCENTILE:
+        case ParamType.TIMESTAMP:
             return {
                 "type": scale.hip_type,
                 "brush_extents_normalized": normalized,
